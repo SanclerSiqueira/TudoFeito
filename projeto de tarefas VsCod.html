@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Adicionada nova fonte para ser usada no rodapé -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #2c2b3e;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #e0e0e0;
+            /* Esta margem cria espaço entre o título e o campo de entrada */
+            margin-bottom: 25px; 
+            font-size: 2em;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            /* O ESPAÇO AQUI FOI ALTERADO */
+            margin-bottom: 60px; 
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background-color: #3b3a51;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            outline: none;
+            transition: box-shadow 0.3s ease;
+        }
+        input[type="text"]:focus {
+            box-shadow: 0 0 0 3px #5b587b;
+        }
+        .add-button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 15px;
+            background: #5b587b;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .add-button:hover {
+            background-color: #7a779c;
+        }
+        .add-button:active {
+            transform: scale(0.98);
+        }
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            /* Esta margem cria espaço entre cada item da lista */
+            gap: 15px;
+        }
+        /* ESTADO PADRÃO: BALÃO BRANCO */
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #FFFFFF;
+            padding: 6px;
+            border-radius: 15px;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .todo-item span {
+            flex-grow: 1;
+            text-align: left;
+            margin-right: 10px;
+            font-size: 0.9em;
+            line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            color: #333333;
+        }
+        /* ESTADO CONCLUÍDO: BALÃO VERDE */
+        .todo-item.completed {
+            background-color: #28a745;
+            text-decoration: line-through;
+            opacity: 0.8; /* Opacidade alterada */
+        }
+        .todo-item.completed span {
+            color: #e0e0e0;
+        }
+        /* NOVO ESTADO: BALÃO VERMELHO */
+        .todo-item.uncompleted {
+            background-color: #F44336;
+        }
+        .todo-item.uncompleted span {
+            color: #e0e0e0;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .complete-button, .uncomplete-button, .delete-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+        }
+        .complete-button {
+            color: #4CAF50;
+        }
+        .uncomplete-button {
+            color: #F44336;
+        }
+        .delete-button {
+            color: #F44336;
+        }
+        .complete-button:hover {
+            color: #4CAF50;
+        }
+        .uncomplete-button:hover {
+            color: #F44336;
+        }
+        .delete-button:hover {
+            color: #F44336;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #6a779c;
+            font-size: 0.8em;
+        }
+        .by-text {
+            color: #4b4a62;
+            font-family: 'Roboto', sans-serif;
+        }
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Minhas Tarefas</h1>
+    <div class="input-group">
+        <input type="text" id="taskInput" placeholder="Adicionar nova tarefa...">
+        <button class="add-button" onclick="addTask()">Adicionar</button>
+    </div>
+    <ul id="taskList" class="todo-list"></ul>
+
+    <footer>
+        <span class="by-text">By: Sancler Siqueira</span>
+    </footer>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTasks();
+    });
+
+    // Funcao para carregar tarefas do localStorage
+    function loadTasks() {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = '';
+        tasks.forEach(task => {
+            renderTask(task.text, task.status);
+        });
+    }
+
+    // Funcao para salvar tarefas no localStorage
+    function saveTasks() {
+        const tasks = [];
+        document.querySelectorAll('#taskList .todo-item').forEach(item => {
+            let status = 'neutral';
+            if (item.classList.contains('completed')) {
+                status = 'completed';
+            } else if (item.classList.contains('uncompleted')) {
+                status = 'uncompleted';
+            }
+            tasks.push({
+                text: item.querySelector('span').textContent,
+                status: status
+            });
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Funcao para renderizar uma tarefa na lista
+    function renderTask(text, status) {
+        const taskList = document.getElementById('taskList');
+        const li = document.createElement('li');
+        li.className = `todo-item ${status === 'completed' ? 'completed' : status === 'uncompleted' ? 'uncompleted' : ''}`;
+        li.innerHTML = `
+            <span contenteditable="true" onblur="saveEditedTask(this)" onkeydown="if(event.key === 'Enter') { this.blur(); }">${text}</span>
+            <div class="actions">
+                <button class="complete-button" onclick="completeTask(this)">✔</button>
+                <button class="uncomplete-button" onclick="uncompleteTask(this)">✖</button>
+                <button class="delete-button" onclick="deleteTask(this)">🗑️</button>
+            </div>
+        `;
+        taskList.appendChild(li);
+    }
+
+    // Funcao para adicionar uma nova tarefa
+    function addTask() {
+        const taskInput = document.getElementById('taskInput');
+        const text = taskInput.value.trim();
+        if (text) {
+            renderTask(text, 'neutral');
+            saveTasks();
+            taskInput.value = '';
+        }
+    }
+
+    // Funcao para salvar a tarefa editada
+    function saveEditedTask(span) {
+        const li = span.closest('.todo-item');
+        li.classList.remove('completed');
+        li.classList.remove('uncompleted');
+        saveTasks();
+    }
+
+    // Funcao para marcar uma tarefa como concluida
+    function completeTask(button) {
+        const li = button.closest('.todo-item');
+        li.classList.remove('uncompleted'); // Remove a classe de não concluído
+        li.classList.add('completed');     // Adiciona a classe de concluído
+        saveTasks();
+    }
+
+    // Funcao para desmarcar uma tarefa (tornar nao concluida)
+    function uncompleteTask(button) {
+        const li = button.closest('.todo-item');
+        li.classList.remove('completed');   // Remove a classe de concluído
+        li.classList.add('uncompleted');  // Adiciona a classe de não concluído
+        saveTasks();
+    }
+
+    // Funcao para deletar uma tarefa
+    function deleteTask(button) {
+        const li = button.closest('.todo-item');
+        li.remove();
+        saveTasks();
+    }
+</script>
+
+</body>
+</html>
