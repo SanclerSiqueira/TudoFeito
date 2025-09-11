@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Tarefas</title>
+    <title>QuadroSiq</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Adicionada nova fonte para ser usada no rodapé -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #1a1a2e;
             color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .container {
             background-color: #2c2b3e;
@@ -25,249 +22,767 @@
             border-radius: 20px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
             width: 100%;
-            max-width: 500px;
+            max-width: 900px;
             text-align: center;
-        }
-        h1 {
-            color: #e0e0e0;
-            /* Esta margem cria espaço entre o título e o campo de entrada */
-            margin-bottom: 25px; 
-            font-size: 2em;
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-            /* O ESPAÇO AQUI FOI ALTERADO */
-            margin-bottom: 60px; 
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            border-radius: 15px;
-            background-color: #3b3a51;
-            color: #e0e0e0;
-            font-size: 0.9em;
-            outline: none;
-            transition: box-shadow 0.3s ease;
-        }
-        input[type="text"]:focus {
-            box-shadow: 0 0 0 3px #5b587b;
-        }
-        .add-button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 15px;
-            background: #5b587b;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-        }
-        .add-button:hover {
-            background-color: #7a779c;
-        }
-        .add-button:active {
-            transform: scale(0.98);
-        }
-        .todo-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
             display: flex;
             flex-direction: column;
-            /* Esta margem cria espaço entre cada item da lista */
-            gap: 15px;
         }
-        /* ESTADO PADRÃO: BALÃO BRANCO */
-        .todo-item {
+        h1 {
+            font-family: Arial, sans-serif;
+            font-size: 1.5em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .header-subtitle {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        .boards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .board {
+            background-color: #3b3a51;
+            padding: 20px;
+            border-radius: 15px;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .board-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #FFFFFF;
-            padding: 6px;
-            border-radius: 15px;
-            transition: transform 0.3s ease, background-color 0.3s ease;
+            margin-bottom: 20px;
         }
-        .todo-item span {
-            flex-grow: 1;
-            text-align: left;
-            margin-right: 10px;
-            font-size: 0.9em;
-            line-height: 1.5;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            color: #333333;
-        }
-        /* ESTADO CONCLUÍDO: BALÃO VERDE */
-        .todo-item.completed {
-            background-color: #28a745;
-            text-decoration: line-through;
-            opacity: 0.8; /* Opacidade alterada */
-        }
-        .todo-item.completed span {
-            color: #e0e0e0;
-        }
-        /* NOVO ESTADO: BALÃO VERMELHO */
-        .todo-item.uncompleted {
-            background-color: #F44336;
-        }
-        .todo-item.uncompleted span {
-            color: #e0e0e0;
-        }
-        .actions {
-            display: flex;
-            gap: 5px;
-        }
-        .complete-button, .uncomplete-button, .delete-button {
-            background-color: transparent;
-            border: none;
+        .board-title {
+            font-size: 1.5em;
+            font-weight: bold;
             cursor: pointer;
+            outline: none;
+            border: none;
+            background: none;
+            color: inherit;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .board-title:focus {
+            background-color: #4b4a62;
+            border-radius: 5px;
+            padding: 2px 5px;
+        }
+        .input-group, .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background-color: #5c5a71;
+            color: #e0e0e0;
+            outline: none;
+            min-width: 100px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: #6a0584;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #8c069b;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+            min-height: 50px;
+        }
+        .task {
+            background-color: #5c5a71;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            text-align: left;
+            word-wrap: break-word;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .task.completed {
+            background-color: #2ecc71;
+        }
+        .task-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .task-text {
+            flex-grow: 1;
+            outline: none;
+        }
+        .task-checkbox {
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+        .task-checkbox:checked {
+            background-color: #6a0584;
+            border-color: #6a0584;
+        }
+        .task-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .task-delete {
+            background-color: transparent;
+            color: #ff5252;
             font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
             transition: color 0.3s ease;
         }
-        .complete-button {
-            color: #4CAF50;
+        .task-delete:hover {
+            color: #ff8c8c;
         }
-        .uncomplete-button {
-            color: #F44336;
+        .delete-board-btn {
+            background-color: transparent;
+            color: #ff5252;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
         }
-        .delete-button {
-            color: #F44336;
+        .delete-board-btn:hover {
+            color: #ff8c8c;
         }
-        .complete-button:hover {
-            color: #4CAF50;
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
         }
-        .uncomplete-button:hover {
-            color: #F44336;
+        .board.drag-over {
+            background-color: #4b4a62;
         }
-        .delete-button:hover {
-            color: #F44336;
+        .share-container, .new-board-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
         }
-        footer {
-            margin-top: 40px;
+        .share-container button, .new-board-container button {
+            width: auto;
+        }
+        .message-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            font-family: 'Inter', sans-serif;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+        .confirmation-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .confirmation-modal-content {
+            background-color: #3b3a51;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
-            color: #6a779c;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 400px;
+        }
+        .confirmation-modal-content p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .confirmation-modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .confirmation-modal-buttons button {
+            flex: 1;
+        }
+        .confirmation-modal-buttons .cancel-btn {
+            background-color: #5c5a71;
+        }
+        .confirmation-modal-buttons .cancel-btn:hover {
+            background-color: #6c6a81;
+        }
+        .signature {
             font-size: 0.8em;
+            color: #777;
+            margin-top: 10px;
         }
-        .by-text {
-            color: #4b4a62;
-            font-family: 'Roboto', sans-serif;
-        }
-        @media (max-width: 600px) {
-            .input-group {
+        @media (max-width: 768px) {
+            .boards-container {
                 flex-direction: column;
+            }
+            .board {
+                margin-bottom: 20px;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Minhas Tarefas</h1>
-    <div class="input-group">
-        <input type="text" id="taskInput" placeholder="Adicionar nova tarefa...">
-        <button class="add-button" onclick="addTask()">Adicionar</button>
+    <div class="container">
+        <h1>QuadroSiq</h1>
+        <h2 class="header-subtitle">Quadro de tarefas</h2>
+        <div class="new-board-container">
+            <button id="add-board-btn">Adicionar Tópico</button>
+        </div>
+        <div class="boards-container" id="boards-container">
+            <!-- Os quadros dinâmicos são renderizados aqui via JavaScript -->
+        </div>
+        <div class="share-container">
+            <button id="share-btn">Compartilhar Quadro</button>
+        </div>
+        <p class="signature">by:Sancler Siqueira</p>
     </div>
-    <ul id="taskList" class="todo-list"></ul>
+    <div id="message-box" class="message-box"></div>
 
-    <footer>
-        <span class="by-text">By: Sancler Siqueira</span>
-    </footer>
-</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        loadTasks();
-    });
+        // Variáveis globais do ambiente de desenvolvimento (não altere estas linhas)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-    // Funcao para carregar tarefas do localStorage
-    function loadTasks() {
-        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        const taskList = document.getElementById('taskList');
-        taskList.innerHTML = '';
-        tasks.forEach(task => {
-            renderTask(task.text, task.status);
-        });
-    }
+        // =========================================================================
+        // PASSO CRUCIAL: SUBSTITUA ESTE OBJETO PELA SUA PRÓPRIA CONFIGURAÇÃO DO FIREBASE.
+        // Copie a sua configuração diretamente da consola do Firebase e cole-a aqui.
+        // Este é o passo mais importante para resolver o erro de conexão.
+        // =========================================================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // =========================================================================
 
-    // Funcao para salvar tarefas no localStorage
-    function saveTasks() {
-        const tasks = [];
-        document.querySelectorAll('#taskList .todo-item').forEach(item => {
-            let status = 'neutral';
-            if (item.classList.contains('completed')) {
-                status = 'completed';
-            } else if (item.classList.contains('uncompleted')) {
-                status = 'uncompleted';
+
+        let db, auth, userId;
+        let draggedTask = null;
+
+        async function initializeFirebase() {
+            try {
+                const configToUse = (typeof __firebase_config !== 'undefined' && __firebase_config) ? JSON.parse(__firebase_config) : firebaseConfig;
+                
+                const app = initializeApp(configToUse);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+
+                console.log("Firebase e Firestore inicializados e autenticados.");
+                setupRealtimeListeners();
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
             }
-            tasks.push({
-                text: item.querySelector('span').textContent,
-                status: status
-            });
-        });
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-
-    // Funcao para renderizar uma tarefa na lista
-    function renderTask(text, status) {
-        const taskList = document.getElementById('taskList');
-        const li = document.createElement('li');
-        li.className = `todo-item ${status === 'completed' ? 'completed' : status === 'uncompleted' ? 'uncompleted' : ''}`;
-        li.innerHTML = `
-            <span contenteditable="true" onblur="saveEditedTask(this)" onkeydown="if(event.key === 'Enter') { this.blur(); }">${text}</span>
-            <div class="actions">
-                <button class="complete-button" onclick="completeTask(this)">✔</button>
-                <button class="uncomplete-button" onclick="uncompleteTask(this)">✖</button>
-                <button class="delete-button" onclick="deleteTask(this)">🗑️</button>
-            </div>
-        `;
-        taskList.appendChild(li);
-    }
-
-    // Funcao para adicionar uma nova tarefa
-    function addTask() {
-        const taskInput = document.getElementById('taskInput');
-        const text = taskInput.value.trim();
-        if (text) {
-            renderTask(text, 'neutral');
-            saveTasks();
-            taskInput.value = '';
         }
-    }
 
-    // Funcao para salvar a tarefa editada
-    function saveEditedTask(span) {
-        const li = span.closest('.todo-item');
-        li.classList.remove('completed');
-        li.classList.remove('uncompleted');
-        saveTasks();
-    }
+        function createTaskElement(task) {
+            const li = document.createElement('li');
+            li.className = 'task';
+            li.draggable = true;
+            li.dataset.taskId = task.id;
 
-    // Funcao para marcar uma tarefa como concluida
-    function completeTask(button) {
-        const li = button.closest('.todo-item');
-        li.classList.remove('uncompleted'); // Remove a classe de não concluído
-        li.classList.add('completed');     // Adiciona a classe de concluído
-        saveTasks();
-    }
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'task-checkbox';
+            checkbox.checked = task.completed;
 
-    // Funcao para desmarcar uma tarefa (tornar nao concluida)
-    function uncompleteTask(button) {
-        const li = button.closest('.todo-item');
-        li.classList.remove('completed');   // Remove a classe de concluído
-        li.classList.add('uncompleted');  // Adiciona a classe de não concluído
-        saveTasks();
-    }
+            const taskTextSpan = document.createElement('span');
+            taskTextSpan.className = 'task-text';
+            taskTextSpan.contentEditable = true;
+            taskTextSpan.textContent = task.text;
 
-    // Funcao para deletar uma tarefa
-    function deleteTask(button) {
-        const li = button.closest('.todo-item');
-        li.remove();
-        saveTasks();
-    }
-</script>
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'task-delete';
+            deleteBtn.textContent = '×';
 
+            const taskContentDiv = document.createElement('div');
+            taskContentDiv.className = 'task-content';
+            taskContentDiv.appendChild(checkbox);
+            taskContentDiv.appendChild(taskTextSpan);
+
+            li.appendChild(taskContentDiv);
+            li.appendChild(deleteBtn);
+
+            checkbox.addEventListener('change', async (e) => {
+                await updateTaskStatus(task.id, taskTextSpan.textContent.trim(), e.target.checked);
+            });
+
+            taskTextSpan.addEventListener('blur', async (e) => {
+                const newText = e.target.textContent.trim();
+                await updateTaskStatus(task.id, newText, task.completed);
+            });
+            taskTextSpan.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.target.blur();
+                }
+            });
+
+            deleteBtn.addEventListener('click', async () => {
+                await deleteTask(task.id);
+            });
+
+            return li;
+        }
+
+        function renderBoards(data) {
+            const boardsContainer = document.getElementById('boards-container');
+            
+            boardsContainer.innerHTML = '';
+
+            data.boards.forEach(boardData => {
+                const boardElement = document.createElement('div');
+                boardElement.className = 'board';
+                boardElement.id = boardData.id;
+
+                const boardHeader = document.createElement('div');
+                boardHeader.className = 'board-header';
+                
+                const boardTitle = document.createElement('h2');
+                boardTitle.className = 'board-title';
+                boardTitle.contentEditable = true;
+                boardTitle.textContent = boardData.title;
+                boardTitle.dataset.id = boardData.id;
+                
+                boardHeader.appendChild(boardTitle);
+
+                const deleteBoardBtn = document.createElement('button');
+                deleteBoardBtn.className = 'delete-board-btn';
+                deleteBoardBtn.textContent = '×';
+                deleteBoardBtn.addEventListener('click', () => handleBoardDelete(boardData.id));
+                boardHeader.appendChild(deleteBoardBtn);
+
+                const taskList = document.createElement('ul');
+                taskList.className = 'task-list';
+                taskList.dataset.id = boardData.id;
+
+                boardElement.appendChild(boardHeader);
+                boardElement.appendChild(taskList);
+
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group';
+                const taskInput = document.createElement('input');
+                taskInput.type = 'text';
+                taskInput.placeholder = 'nova tarefa!';
+                taskInput.className = 'task-input';
+                const addTaskBtn = document.createElement('button');
+                addTaskBtn.className = 'add-task-btn';
+                addTaskBtn.textContent = 'Adicionar';
+                inputGroup.appendChild(taskInput);
+                inputGroup.appendChild(addTaskBtn);
+                boardElement.appendChild(inputGroup);
+
+                boardsContainer.appendChild(boardElement);
+
+                boardData.tasks.forEach(task => {
+                    const taskElement = createTaskElement(task);
+                    taskList.appendChild(taskElement);
+                    if (task.completed) {
+                        taskElement.classList.add('completed');
+                    } else {
+                        taskElement.classList.remove('completed');
+                    }
+                });
+            });
+
+            setupDynamicListeners();
+        }
+
+        function setupDynamicListeners() {
+            document.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('task')) {
+                    draggedTask = e.target;
+                    draggedTask.classList.add('dragging');
+                }
+            });
+
+            document.addEventListener('dragend', () => {
+                if (draggedTask) {
+                    draggedTask.classList.remove('dragging');
+                    draggedTask = null;
+                }
+            });
+
+            document.querySelectorAll('.board').forEach(board => {
+                board.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(board, e.clientY);
+                    const taskList = board.querySelector('.task-list');
+                    
+                    board.classList.add('drag-over');
+
+                    if (afterElement == null) {
+                        taskList.appendChild(draggedTask);
+                    } else {
+                        taskList.insertBefore(draggedTask, afterElement);
+                    }
+                });
+
+                board.addEventListener('dragleave', () => {
+                    board.classList.remove('drag-over');
+                });
+            });
+
+            document.querySelectorAll('.board').forEach(board => {
+                board.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    board.classList.remove('drag-over');
+                    if (draggedTask) {
+                        const taskId = draggedTask.dataset.taskId;
+                        const newBoardId = board.id;
+                        const newOrder = Array.from(board.querySelector('.task-list').children).map(li => li.dataset.taskId);
+                        await moveTaskAndUpdateOrder(taskId, newBoardId, newOrder);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.add-task-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const board = e.target.closest('.board');
+                    const input = board.querySelector('.task-input');
+                    const taskText = input.value.trim();
+                    if (taskText !== '') {
+                        const boardId = board.querySelector('.board-title').dataset.id;
+                        await addTask(boardId, taskText);
+                        input.value = '';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.task-input').forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.nextElementSibling.click();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.board-title').forEach(title => {
+                title.addEventListener('blur', async (e) => {
+                    const boardId = e.target.dataset.id;
+                    await updateBoardTitles(boardId, e.target.textContent.trim());
+                });
+                title.addEventListener('keydown', (e) => {
+                     if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.blur();
+                    }
+                });
+            });
+        }
+
+
+        async function updateBoardsData(newData) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            try {
+                await setDoc(docRef, newData);
+                console.log("Dados do quadro atualizados no Firestore.");
+            } catch (e) {
+                console.error("Erro ao atualizar o documento: ", e);
+            }
+        }
+
+        async function addTask(boardId, taskText) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+            const data = docSnap.data();
+
+            const newId = `task-${Date.now()}`;
+            const newTask = { id: newId, text: taskText, completed: false };
+
+            const board = data.boards.find(b => b.id === boardId);
+            if (board) {
+                board.tasks.push(newTask);
+            }
+            
+            await updateBoardsData(data);
+        }
+        
+        async function updateTaskStatus(taskId, newText, isCompleted) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+            const data = docSnap.data();
+
+            let foundTask = null;
+            for (const board of data.boards) {
+                foundTask = board.tasks.find(t => t.id === taskId);
+                if (foundTask) {
+                    foundTask.text = newText;
+                    foundTask.completed = isCompleted;
+                    break;
+                }
+            }
+            await updateBoardsData(data);
+        }
+
+        async function deleteTask(taskId) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+            const data = docSnap.data();
+            
+            data.boards.forEach(board => {
+                board.tasks = board.tasks.filter(t => t.id !== taskId);
+            });
+            await updateBoardsData(data);
+        }
+
+        async function updateBoardTitles(boardId, newTitle) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+            const data = docSnap.data();
+            
+            const board = data.boards.find(b => b.id === boardId);
+            if (board) {
+                board.title = newTitle;
+                await updateBoardsData(data);
+            }
+        }
+
+        async function addBoard() {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+
+            let data = docSnap.exists() ? docSnap.data() : { boards: [] };
+
+            const newBoardId = `board-${data.boards.length + 1}`;
+            const newBoardTitle = `Tópico ${data.boards.length + 1}`;
+            
+            data.boards.push({ id: newBoardId, title: newBoardTitle, tasks: [] });
+            
+            await updateBoardsData(data);
+        }
+        
+        async function handleBoardDelete(boardId) {
+            showConfirmationModal('Tem certeza que deseja apagar este tópico e todas as suas tarefas?', async () => {
+                await deleteBoard(boardId);
+            });
+        }
+        
+        async function deleteBoard(boardId) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+            
+            if (!docSnap.exists()) {
+                console.error("Documento de quadro não encontrado.");
+                return;
+            }
+            const data = docSnap.data();
+            
+            data.boards = data.boards.filter(b => b.id !== boardId);
+            await updateBoardsData(data);
+        }
+
+        function setupRealtimeListeners() {
+            const boardDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            onSnapshot(boardDocRef, (doc) => {
+                if (doc.exists()) {
+                    renderBoards(doc.data());
+                } else {
+                    const initialData = {
+                        boards: [
+                            { id: 'board-1', title: 'Tópico 1', tasks: [] },
+                        ]
+                    };
+                    updateBoardsData(initialData);
+                }
+            }, (error) => {
+                console.error("Erro no listener do documento do quadro:", error);
+            });
+        }
+        
+        async function moveTaskAndUpdateOrder(taskId, newBoardId, newOrder) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const data = docSnap.data();
+
+            let movedTask = null;
+            let oldBoard = null;
+
+            for (const board of data.boards) {
+                const taskIndex = board.tasks.findIndex(t => t.id === taskId);
+                if (taskIndex !== -1) {
+                    movedTask = board.tasks.splice(taskIndex, 1)[0];
+                    oldBoard = board;
+                    break;
+                }
+            }
+            
+            if (movedTask) {
+                const newBoard = data.boards.find(b => b.id === newBoardId);
+                if (newBoard) {
+                    const newTasks = [];
+                    for (const taskId of newOrder) {
+                        const existingTask = newBoard.tasks.find(t => t.id === taskId);
+                        if (existingTask) {
+                            newTasks.push(existingTask);
+                        } else if (taskId === movedTask.id) {
+                            newTasks.push(movedTask);
+                        }
+                    }
+                    newBoard.tasks = newTasks;
+                    await updateBoardsData(data);
+                } else {
+                    if (oldBoard) {
+                        oldBoard.tasks.push(movedTask);
+                        await updateBoardsData(data);
+                    }
+                }
+            }
+        }
+
+        function getDragAfterElement(board, y) {
+            const draggableTasks = [...board.querySelectorAll('.task:not(.dragging)')];
+            return draggableTasks.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function copyShareLink() {
+            const shareLink = window.location.href;
+            try {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = shareLink;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showMessageBox('Link de compartilhamento copiado!');
+            } catch (err) {
+                console.error('Falha ao copiar o link:', err);
+                showMessageBox('Falha ao copiar o link. Por favor, copie manualmente.');
+            }
+        }
+        
+        function showMessageBox(message) {
+            const box = document.getElementById('message-box');
+            box.textContent = message;
+            box.classList.add('show');
+            setTimeout(() => {
+                box.classList.remove('show');
+            }, 3000);
+        }
+
+        function showConfirmationModal(message, onConfirm) {
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'confirmation-modal-overlay';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'confirmation-modal-content';
+
+            const p = document.createElement('p');
+            p.textContent = message;
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'confirm-btn';
+            confirmBtn.textContent = 'Confirmar';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'cancel-btn';
+            cancelBtn.textContent = 'Cancelar';
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'confirmation-modal-buttons';
+            buttonContainer.appendChild(confirmBtn);
+            buttonContainer.appendChild(cancelBtn);
+
+            modalContent.appendChild(p);
+            modalContent.appendChild(buttonContainer);
+            modalOverlay.appendChild(modalContent);
+
+            document.body.appendChild(modalOverlay);
+
+            confirmBtn.addEventListener('click', () => {
+                onConfirm();
+                modalOverlay.remove();
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                modalOverlay.remove();
+            });
+        }
+
+
+        document.getElementById('share-btn').addEventListener('click', copyShareLink);
+        
+        document.getElementById('add-board-btn').addEventListener('click', addBoard);
+
+        window.onload = initializeFirebase;
+    </script>
 </body>
 </html>
