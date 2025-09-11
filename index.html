@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuadroSiq</title>
+    <title>BoardSiq</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -28,13 +29,14 @@
             flex-direction: column;
         }
         h1 {
-            font-family: Arial, sans-serif;
-            font-size: 1.5em;
+            font-family: 'Rubik Mono One', monospace;
+            font-size: 2.5em;
             color: #e0e0e0;
             margin-bottom: 5px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
         .header-subtitle {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 12px;
             color: #ccc;
             margin-top: 0;
@@ -139,6 +141,7 @@
         .task-text {
             flex-grow: 1;
             outline: none;
+            cursor: text;
         }
         .task-checkbox {
             cursor: pointer;
@@ -276,9 +279,8 @@
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>QuadroSiq</h1>
+        <h1>BoardSiq</h1>
         <h2 class="header-subtitle">Quadro de tarefas</h2>
         <div class="new-board-container">
             <button id="add-board-btn">Adicionar Tópico</button>
@@ -292,92 +294,54 @@
         <p class="signature">by:Sancler Siqueira</p>
     </div>
     <div id="message-box" class="message-box"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Variáveis globais do ambiente de desenvolvimento (não altere estas linhas)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // =========================================================================
-        // PASSO CRUCIAL: SUBSTITUA ESTE OBJETO PELA SUA PRÓPRIA CONFIGURAÇÃO DO FIREBASE.
-        // Copie a sua configuração diretamente da consola do Firebase e cole-a aqui.
-        // Este é o passo mais importante para resolver o erro de conexão.
-        // =========================================================================
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        // =========================================================================
-
-
-        let db, auth, userId;
+    <script>
         let draggedTask = null;
-
-        async function initializeFirebase() {
-            try {
-                const configToUse = (typeof __firebase_config !== 'undefined' && __firebase_config) ? JSON.parse(__firebase_config) : firebaseConfig;
-                
-                const app = initializeApp(configToUse);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-
-                console.log("Firebase e Firestore inicializados e autenticados.");
-                setupRealtimeListeners();
-            } catch (error) {
-                console.error("Erro ao inicializar Firebase:", error);
+        const STORAGE_KEY = 'kanban_boards_data';
+        
+        // Função para carregar os dados do localStorage
+        function loadData() {
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            if (storedData) {
+                return JSON.parse(storedData);
             }
+            return {
+                boards: [
+                    { id: 'board-1', title: 'Tópico 1', tasks: [] },
+                ]
+            };
         }
-
-        function createTaskElement(task) {
+        // Função para salvar os dados no localStorage
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+        function createTaskElement(task, boardId) {
             const li = document.createElement('li');
             li.className = 'task';
             li.draggable = true;
             li.dataset.taskId = task.id;
-
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'task-checkbox';
             checkbox.checked = task.completed;
-
             const taskTextSpan = document.createElement('span');
             taskTextSpan.className = 'task-text';
             taskTextSpan.contentEditable = true;
             taskTextSpan.textContent = task.text;
-
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'task-delete';
             deleteBtn.textContent = '×';
-
             const taskContentDiv = document.createElement('div');
             taskContentDiv.className = 'task-content';
             taskContentDiv.appendChild(checkbox);
             taskContentDiv.appendChild(taskTextSpan);
-
             li.appendChild(taskContentDiv);
             li.appendChild(deleteBtn);
-
-            checkbox.addEventListener('change', async (e) => {
-                await updateTaskStatus(task.id, taskTextSpan.textContent.trim(), e.target.checked);
+            checkbox.addEventListener('change', (e) => {
+                updateTaskStatus(task.id, taskTextSpan.textContent.trim(), e.target.checked);
             });
-
-            taskTextSpan.addEventListener('blur', async (e) => {
+            taskTextSpan.addEventListener('blur', (e) => {
                 const newText = e.target.textContent.trim();
-                await updateTaskStatus(task.id, newText, task.completed);
+                updateTaskStatus(task.id, newText, task.completed);
             });
             taskTextSpan.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -385,24 +349,19 @@
                     e.target.blur();
                 }
             });
-
-            deleteBtn.addEventListener('click', async () => {
-                await deleteTask(task.id);
+            deleteBtn.addEventListener('click', () => {
+                deleteTask(boardId, task.id);
             });
-
             return li;
         }
-
         function renderBoards(data) {
             const boardsContainer = document.getElementById('boards-container');
             
             boardsContainer.innerHTML = '';
-
             data.boards.forEach(boardData => {
                 const boardElement = document.createElement('div');
                 boardElement.className = 'board';
                 boardElement.id = boardData.id;
-
                 const boardHeader = document.createElement('div');
                 boardHeader.className = 'board-header';
                 
@@ -411,22 +370,19 @@
                 boardTitle.contentEditable = true;
                 boardTitle.textContent = boardData.title;
                 boardTitle.dataset.id = boardData.id;
+                boardTitle.dataset.originalTitle = boardData.title;
                 
                 boardHeader.appendChild(boardTitle);
-
                 const deleteBoardBtn = document.createElement('button');
                 deleteBoardBtn.className = 'delete-board-btn';
                 deleteBoardBtn.textContent = '×';
                 deleteBoardBtn.addEventListener('click', () => handleBoardDelete(boardData.id));
                 boardHeader.appendChild(deleteBoardBtn);
-
                 const taskList = document.createElement('ul');
                 taskList.className = 'task-list';
                 taskList.dataset.id = boardData.id;
-
                 boardElement.appendChild(boardHeader);
                 boardElement.appendChild(taskList);
-
                 const inputGroup = document.createElement('div');
                 inputGroup.className = 'input-group';
                 const taskInput = document.createElement('input');
@@ -439,11 +395,9 @@
                 inputGroup.appendChild(taskInput);
                 inputGroup.appendChild(addTaskBtn);
                 boardElement.appendChild(inputGroup);
-
                 boardsContainer.appendChild(boardElement);
-
                 boardData.tasks.forEach(task => {
-                    const taskElement = createTaskElement(task);
+                    const taskElement = createTaskElement(task, boardData.id);
                     taskList.appendChild(taskElement);
                     if (task.completed) {
                         taskElement.classList.add('completed');
@@ -452,10 +406,8 @@
                     }
                 });
             });
-
             setupDynamicListeners();
         }
-
         function setupDynamicListeners() {
             document.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('task')) {
@@ -463,14 +415,12 @@
                     draggedTask.classList.add('dragging');
                 }
             });
-
             document.addEventListener('dragend', () => {
                 if (draggedTask) {
                     draggedTask.classList.remove('dragging');
                     draggedTask = null;
                 }
             });
-
             document.querySelectorAll('.board').forEach(board => {
                 board.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -478,45 +428,40 @@
                     const taskList = board.querySelector('.task-list');
                     
                     board.classList.add('drag-over');
-
                     if (afterElement == null) {
                         taskList.appendChild(draggedTask);
                     } else {
                         taskList.insertBefore(draggedTask, afterElement);
                     }
                 });
-
                 board.addEventListener('dragleave', () => {
                     board.classList.remove('drag-over');
                 });
             });
-
             document.querySelectorAll('.board').forEach(board => {
-                board.addEventListener('drop', async (e) => {
+                board.addEventListener('drop', (e) => {
                     e.preventDefault();
                     board.classList.remove('drag-over');
                     if (draggedTask) {
                         const taskId = draggedTask.dataset.taskId;
                         const newBoardId = board.id;
                         const newOrder = Array.from(board.querySelector('.task-list').children).map(li => li.dataset.taskId);
-                        await moveTaskAndUpdateOrder(taskId, newBoardId, newOrder);
+                        moveTaskAndUpdateOrder(taskId, newBoardId, newOrder);
                     }
                 });
             });
-
             document.querySelectorAll('.add-task-btn').forEach(button => {
-                button.addEventListener('click', async (e) => {
+                button.addEventListener('click', (e) => {
                     const board = e.target.closest('.board');
                     const input = board.querySelector('.task-input');
                     const taskText = input.value.trim();
                     if (taskText !== '') {
                         const boardId = board.querySelector('.board-title').dataset.id;
-                        await addTask(boardId, taskText);
+                        addTask(boardId, taskText);
                         input.value = '';
                     }
                 });
             });
-
             document.querySelectorAll('.task-input').forEach(input => {
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
@@ -525,11 +470,15 @@
                     }
                 });
             });
-
             document.querySelectorAll('.board-title').forEach(title => {
-                title.addEventListener('blur', async (e) => {
+                title.addEventListener('blur', (e) => {
                     const boardId = e.target.dataset.id;
-                    await updateBoardTitles(boardId, e.target.textContent.trim());
+                    const oldTitle = e.target.dataset.originalTitle;
+                    const newTitle = e.target.textContent.trim();
+                    if (newTitle !== oldTitle) {
+                       updateBoardTitles(boardId, newTitle);
+                       e.target.dataset.originalTitle = newTitle;
+                    }
                 });
                 title.addEventListener('keydown', (e) => {
                      if (e.key === 'Enter') {
@@ -539,39 +488,22 @@
                 });
             });
         }
-
-
-        async function updateBoardsData(newData) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            try {
-                await setDoc(docRef, newData);
-                console.log("Dados do quadro atualizados no Firestore.");
-            } catch (e) {
-                console.error("Erro ao atualizar o documento: ", e);
-            }
+        function updateBoardsData(newData) {
+            saveData(newData);
+            renderBoards(newData);
         }
-
-        async function addTask(boardId, taskText) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-            const data = docSnap.data();
-
+        function addTask(boardId, taskText) {
+            const data = loadData();
             const newId = `task-${Date.now()}`;
             const newTask = { id: newId, text: taskText, completed: false };
-
             const board = data.boards.find(b => b.id === boardId);
             if (board) {
                 board.tasks.push(newTask);
             }
-            
-            await updateBoardsData(data);
+            updateBoardsData(data);
         }
-        
-        async function updateTaskStatus(taskId, newText, isCompleted) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-            const data = docSnap.data();
-
+        function updateTaskStatus(taskId, newText, isCompleted) {
+            const data = loadData();
             let foundTask = null;
             for (const board of data.boards) {
                 foundTask = board.tasks.find(t => t.id === taskId);
@@ -581,125 +513,77 @@
                     break;
                 }
             }
-            await updateBoardsData(data);
+            updateBoardsData(data);
         }
-
-        async function deleteTask(taskId) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-            const data = docSnap.data();
+        function deleteTask(boardId, taskId) {
+            const data = loadData();
             
-            data.boards.forEach(board => {
-                board.tasks = board.tasks.filter(t => t.id !== taskId);
-            });
-            await updateBoardsData(data);
+            const board = data.boards.find(b => b.id === boardId);
+            if (board) {
+                board.tasks = board.tasks.filter(task => task.id !== taskId);
+                updateBoardsData(data);
+            }
         }
-
-        async function updateBoardTitles(boardId, newTitle) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-            const data = docSnap.data();
+        function updateBoardTitles(boardId, newTitle) {
+            const data = loadData();
             
             const board = data.boards.find(b => b.id === boardId);
             if (board) {
                 board.title = newTitle;
-                await updateBoardsData(data);
+                updateBoardsData(data);
             }
         }
-
-        async function addBoard() {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-
-            let data = docSnap.exists() ? docSnap.data() : { boards: [] };
-
+        function addBoard() {
+            const data = loadData();
+            if (!data.boards) {
+                data.boards = [];
+            }
             const newBoardId = `board-${data.boards.length + 1}`;
             const newBoardTitle = `Tópico ${data.boards.length + 1}`;
-            
             data.boards.push({ id: newBoardId, title: newBoardTitle, tasks: [] });
-            
-            await updateBoardsData(data);
+            updateBoardsData(data);
         }
-        
-        async function handleBoardDelete(boardId) {
-            showConfirmationModal('Tem certeza que deseja apagar este tópico e todas as suas tarefas?', async () => {
-                await deleteBoard(boardId);
+        function handleBoardDelete(boardId) {
+            showConfirmationModal('Tem certeza que deseja apagar este tópico e todas as suas tarefas?', () => {
+                deleteBoard(boardId);
             });
         }
-        
-        async function deleteBoard(boardId) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-            
-            if (!docSnap.exists()) {
-                console.error("Documento de quadro não encontrado.");
-                return;
-            }
-            const data = docSnap.data();
-            
+        function deleteBoard(boardId) {
+            const data = loadData();
             data.boards = data.boards.filter(b => b.id !== boardId);
-            await updateBoardsData(data);
+            updateBoardsData(data);
         }
-
-        function setupRealtimeListeners() {
-            const boardDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            onSnapshot(boardDocRef, (doc) => {
-                if (doc.exists()) {
-                    renderBoards(doc.data());
-                } else {
-                    const initialData = {
-                        boards: [
-                            { id: 'board-1', title: 'Tópico 1', tasks: [] },
-                        ]
-                    };
-                    updateBoardsData(initialData);
-                }
-            }, (error) => {
-                console.error("Erro no listener do documento do quadro:", error);
-            });
-        }
-        
-        async function moveTaskAndUpdateOrder(taskId, newBoardId, newOrder) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'kanban_boards', 'kanbanBoard');
-            const docSnap = await getDoc(docRef);
-            if (!docSnap.exists()) return;
-            const data = docSnap.data();
-
+        function moveTaskAndUpdateOrder(taskId, newBoardId, newOrder) {
+            const data = loadData();
             let movedTask = null;
-            let oldBoard = null;
-
+            // Encontra a tarefa e a remove do seu quadro original.
             for (const board of data.boards) {
                 const taskIndex = board.tasks.findIndex(t => t.id === taskId);
                 if (taskIndex !== -1) {
                     movedTask = board.tasks.splice(taskIndex, 1)[0];
-                    oldBoard = board;
                     break;
                 }
             }
-            
-            if (movedTask) {
-                const newBoard = data.boards.find(b => b.id === newBoardId);
-                if (newBoard) {
-                    const newTasks = [];
-                    for (const taskId of newOrder) {
-                        const existingTask = newBoard.tasks.find(t => t.id === taskId);
-                        if (existingTask) {
-                            newTasks.push(existingTask);
-                        } else if (taskId === movedTask.id) {
-                            newTasks.push(movedTask);
-                        }
-                    }
-                    newBoard.tasks = newTasks;
-                    await updateBoardsData(data);
-                } else {
-                    if (oldBoard) {
-                        oldBoard.tasks.push(movedTask);
-                        await updateBoardsData(data);
-                    }
-                }
+            if (!movedTask) {
+                console.error("Tarefa não encontrada para mover.");
+                return;
+            }
+            // Encontra o novo quadro para a tarefa.
+            const newBoard = data.boards.find(b => b.id === newBoardId);
+            if (newBoard) {
+                // Insere a tarefa na posição correta no novo quadro.
+                const targetIndex = newOrder.findIndex(id => id === taskId);
+                newBoard.tasks.splice(targetIndex, 0, movedTask);
+                updateBoardsData(data);
+            } else {
+                 console.error("Novo quadro não encontrado. Revertendo a operação.");
+                 const oldBoard = data.boards.find(b => b.tasks.includes(movedTask));
+                 if (oldBoard) {
+                     oldBoard.tasks.push(movedTask);
+                     updateBoardsData(data);
+                 }
             }
         }
-
         function getDragAfterElement(board, y) {
             const draggableTasks = [...board.querySelectorAll('.task:not(.dragging)')];
             return draggableTasks.reduce((closest, child) => {
@@ -712,7 +596,6 @@
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
-
         function copyShareLink() {
             const shareLink = window.location.href;
             try {
@@ -737,52 +620,43 @@
                 box.classList.remove('show');
             }, 3000);
         }
-
         function showConfirmationModal(message, onConfirm) {
             const modalOverlay = document.createElement('div');
             modalOverlay.className = 'confirmation-modal-overlay';
-
             const modalContent = document.createElement('div');
             modalContent.className = 'confirmation-modal-content';
-
             const p = document.createElement('p');
             p.textContent = message;
-
             const confirmBtn = document.createElement('button');
             confirmBtn.className = 'confirm-btn';
             confirmBtn.textContent = 'Confirmar';
-
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'cancel-btn';
             cancelBtn.textContent = 'Cancelar';
-
             const buttonContainer = document.createElement('div');
             buttonContainer.className = 'confirmation-modal-buttons';
             buttonContainer.appendChild(confirmBtn);
             buttonContainer.appendChild(cancelBtn);
-
             modalContent.appendChild(p);
             modalContent.appendChild(buttonContainer);
             modalOverlay.appendChild(modalContent);
-
             document.body.appendChild(modalOverlay);
-
             confirmBtn.addEventListener('click', () => {
                 onConfirm();
                 modalOverlay.remove();
             });
-
             cancelBtn.addEventListener('click', () => {
                 modalOverlay.remove();
             });
         }
-
-
         document.getElementById('share-btn').addEventListener('click', copyShareLink);
         
         document.getElementById('add-board-btn').addEventListener('click', addBoard);
-
-        window.onload = initializeFirebase;
+        
+        window.onload = () => {
+            const initialData = loadData();
+            renderBoards(initialData);
+        };
     </script>
 </body>
 </html>
